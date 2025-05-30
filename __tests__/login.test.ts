@@ -5,21 +5,31 @@ describe('Login Form', () => {
     let browser: Browser;
     let page: Page;
 
+    const login = async (email: string, password: string) => {
+        await page.type('[data-testid="email"]', email);
+        await page.type('[data-testid="password"]', password);
+        await page.click('[data-testid="submit"]');
+    };
+
     beforeAll(async () => {
-        browser = await puppeteer.launch({ headless: true });
-        page = await browser.newPage();
+        browser = await puppeteer.launch({
+            headless: false,
+            slowMo: 50,
+            args: ['--window-size=1720,1440'],
+        });
     });
 
     beforeEach(async () => {
         page = await browser.newPage();
+        await page.setViewport({
+            width: 1720,
+            height: 1440
+        });
         await page.goto(`${BASE_URL}/auth`, { waitUntil: 'networkidle2' });
     });
 
     it('should display the login form and log in successfully', async () => {
-        await page.type('[data-testid="email"]', 'testuser@example.com');
-        await page.type('[data-testid="password"]', 'testpassword123');
-
-        await page.click('[data-testid="submit"]');
+        await login('testuser@example.com', 'testpassword123');
 
         await page.waitForSelector('[data-testid="navbar-dashboard"]', { timeout: 5000 });
 
@@ -28,10 +38,7 @@ describe('Login Form', () => {
     });
 
     it('should show a toast saying "Login successful!" on login', async () => {
-        await page.type('[data-testid="email"]', 'testuser@example.com');
-        await page.type('[data-testid="password"]', 'testpassword123');
-
-        await page.click('[data-testid="submit"]');
+        await login('testuser@example.com', 'testpassword123');
 
         await page.waitForSelector('.Toastify__toast--success', { timeout: 5000 });
 
@@ -58,10 +65,7 @@ describe('Login Form', () => {
     });
 
     it('should show error toast on wrong email with correct password', async () => {
-        await page.type('[data-testid="email"]', 'nonexistent@example.com');
-        await page.type('[data-testid="password"]', 'testpassword123');
-
-        await page.click('[data-testid="submit"]');
+        await login('nonexistent@example.com', 'testpassword123');
 
         await page.waitForSelector('.Toastify__toast--error', { timeout: 5000 });
 
@@ -70,10 +74,7 @@ describe('Login Form', () => {
     });
 
     it('should show error toast on correct email with wrong password', async () => {
-        await page.type('[data-testid="email"]', 'testuser@example.com');
-        await page.type('[data-testid="password"]', 'wrongpassword');
-
-        await page.click('[data-testid="submit"]');
+        await login('testuser@example.com', 'wrongpassword');
 
         await page.waitForSelector('.Toastify__toast--error', { timeout: 5000 });
 
@@ -82,26 +83,21 @@ describe('Login Form', () => {
     });
 
     it('should show "Too short!" below password when password is less than 6 characters', async () => {
-        await page.type('[data-testid="email"]', 'testuser@example.com');
-        await page.type('[data-testid="password"]', '123');
-
-        await page.click('[data-testid="submit"]');
+        await login('testuser@example.com', '123');
 
         const passwordError = await page.$eval('[data-testid="password"] ~ .text-red-500', el => el.textContent?.trim());
         expect(passwordError).toBe('Too short!');
     });
 
     it('should show "Invalid email" below email when email format is wrong', async () => {
-        await page.type('[data-testid="email"]', 'invalid-email-address');
-        await page.type('[data-testid="password"]', 'validpassword');
-
-        await page.click('[data-testid="submit"]');
+        await login('invalid-email-address', 'validpassword');
 
         const emailError = await page.$eval('[data-testid="email"] ~ .text-red-500', el => el.textContent?.trim());
         expect(emailError).toBe('Invalid email');
     });
 
     afterEach(async () => {
+        await page.click('[data-testid="navbar-logout"]');
         await page.close();
     });
 
