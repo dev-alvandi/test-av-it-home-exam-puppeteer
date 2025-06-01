@@ -13,9 +13,9 @@ describe('Login Form', () => {
 
     beforeAll(async () => {
         browser = await puppeteer.launch({
-            headless: false,
-            slowMo: 50,
-            args: ['--window-size=1720,1440'],
+            headless: true,
+            // slowMo: 20,
+            // args: ['--window-size=1720,1440'],
         });
     });
 
@@ -97,7 +97,10 @@ describe('Login Form', () => {
     });
 
     afterEach(async () => {
-        await page.click('[data-testid="navbar-logout"]');
+        const logoutButton = await page.$('[data-testid="navbar-logout"]');
+        if (logoutButton) {
+            await logoutButton.click();
+        }
         await page.close();
     });
 

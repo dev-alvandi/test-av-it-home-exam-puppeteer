@@ -1,0 +1,53 @@
+name: Run Puppeteer Tests on Frontend Change
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  puppeteer-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Frontend Repository
+        uses: actions/checkout@v4
+        with:
+          repository: dev-alvandi/ltu_library_frontend
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Checkout Test Repository
+        uses: actions/checkout@v4
+        with:
+          path: test-suite
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Puppeteer dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libxss1 libasound2 libnss3 libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 libxrandr2 xdg-utils libu2f-udev
+
+      - name: Install dependencies (Test Project)
+        working-directory: test-suite
+        run: npm install
+
+      - name: Run Puppeteer Tests
+        working-directory: test-suite
+        run: npm run test
+
+      - name: Upload test report if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: puppeteer-test-report
+          path: test-suite
+
+      - name: Fail build on test failure
+        if: failure()
+        run: exit 1
