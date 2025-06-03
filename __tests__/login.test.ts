@@ -14,7 +14,7 @@ describe('Login Form', () => {
     beforeAll(async () => {
         browser = await puppeteer.launch({
             headless: true,
-            // slowMo: 20,
+            // slowMo: 30,
             // args: ['--window-size=1720,1440'],
         });
     });
@@ -28,7 +28,7 @@ describe('Login Form', () => {
         await page.goto(`${BASE_URL}/auth`, { waitUntil: 'networkidle2' });
     });
 
-    it('should display the login form and log in successfully', async () => {
+    it('should display the dashboard route in the navbar upon successful login', async () => {
         await login('testuser@example.com', 'testpassword123');
 
         await page.waitForSelector('[data-testid="navbar-dashboard"]', { timeout: 5000 });
@@ -44,6 +44,24 @@ describe('Login Form', () => {
 
         const toastText = await page.$eval('.Toastify__toast--success', el => el.textContent);
         expect(toastText).toContain('Login successful!');
+    });
+
+    it('should show error toast on wrong email with correct password', async () => {
+        await login('nonexistent@example.com', 'testpassword123');
+
+        await page.waitForSelector('.Toastify__toast--error', { timeout: 5000 });
+
+        const toastText = await page.$eval('.Toastify__toast--error', el => el.textContent?.trim());
+        expect(toastText).toContain('Login failed: Invalid email or password');
+    });
+
+    it('should show error toast on correct email with wrong password', async () => {
+        await login('testuser@example.com', 'wrongpassword');
+
+        await page.waitForSelector('.Toastify__toast--error', { timeout: 5000 });
+
+        const toastText = await page.$eval('.Toastify__toast--error', el => el.textContent?.trim());
+        expect(toastText).toContain('Login failed: Invalid email or password');
     });
 
     it('should show "Required" below email when email is empty', async () => {
@@ -64,23 +82,7 @@ describe('Login Form', () => {
         expect(passwordError).toBe('Required');
     });
 
-    it('should show error toast on wrong email with correct password', async () => {
-        await login('nonexistent@example.com', 'testpassword123');
 
-        await page.waitForSelector('.Toastify__toast--error', { timeout: 5000 });
-
-        const toastText = await page.$eval('.Toastify__toast--error', el => el.textContent?.trim());
-        expect(toastText).toContain('Login failed: Invalid email or password');
-    });
-
-    it('should show error toast on correct email with wrong password', async () => {
-        await login('testuser@example.com', 'wrongpassword');
-
-        await page.waitForSelector('.Toastify__toast--error', { timeout: 5000 });
-
-        const toastText = await page.$eval('.Toastify__toast--error', el => el.textContent?.trim());
-        expect(toastText).toContain('Login failed: Invalid email or password');
-    });
 
     it('should show "Too short!" below password when password is less than 6 characters', async () => {
         await login('testuser@example.com', '123');
