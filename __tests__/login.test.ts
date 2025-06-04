@@ -13,7 +13,7 @@ describe('Login Form', () => {
 
     beforeAll(async () => {
         browser = await puppeteer.launch({
-            headless: true,
+            headless: true, // headless or GUI
             // slowMo: 30,
             // args: ['--window-size=1720,1440'],
         });
