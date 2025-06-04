@@ -20,8 +20,6 @@ jobs:
 
       - name: Checkout Test Repository
         uses: actions/checkout@v4
-        with:
-          path: test-suite
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -33,12 +31,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-0 libxss1 libasound2 libnss3 libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 libxrandr2 xdg-utils libu2f-udev
 
-      - name: Install dependencies (Test Project)
-        working-directory: test-suite
+      - name: Install dependencies
         run: npm install
 
       - name: Run Puppeteer Tests
-        working-directory: test-suite
         run: npm run test
 
       - name: Upload test report if failed
@@ -46,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: puppeteer-test-report
-          path: test-suite
+          path: .
 
       - name: Fail build on test failure
         if: failure()
